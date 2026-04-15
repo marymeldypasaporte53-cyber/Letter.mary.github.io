@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>For Jerica 💖</title>
+<title>For You 💖</title>
 
 <style>
 body {
@@ -20,7 +20,6 @@ body {
     width: 100%;
     background: rgba(255,255,255,0.95);
     padding: 10px;
-    z-index: 10;
 }
 
 #gameArea {
@@ -28,36 +27,17 @@ body {
     top: 80px;
     width: 100%;
     height: calc(100vh - 80px);
-    overflow: hidden;
 }
 
-/* Hearts */
 .heart {
     position: absolute;
     font-size: 28px;
     cursor: pointer;
-    user-select: none;
 }
 
-/* Golden heart */
-.gold {
-    color: gold;
-    text-shadow: 0 0 10px gold;
-}
-
-/* Spark effect */
-.spark {
+.sparkle {
     position: absolute;
     font-size: 14px;
-    pointer-events: none;
-    animation: pop 0.5s forwards;
-}
-
-@keyframes pop {
-    to {
-        transform: translateY(-20px);
-        opacity: 0;
-    }
 }
 
 #messageBox {
@@ -69,10 +49,8 @@ body {
     background: white;
     padding: 20px;
     border-radius: 15px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.2);
-    width: 85%;
-    max-width: 340px;
-    z-index: 20;
+    width: 90%;
+    max-width: 360px;
 }
 
 .btn {
@@ -81,10 +59,15 @@ body {
     border-radius: 10px;
     background: #ff7aa2;
     color: white;
-    font-weight: bold;
-    margin: 5px;
+    margin-top: 10px;
     cursor: pointer;
-    position: relative;
+}
+
+.imgBox img {
+    width: 100%;
+    border-radius: 10px;
+    margin-top: 10px;
+    display: none;
 }
 </style>
 </head>
@@ -92,162 +75,216 @@ body {
 <body>
 
 <div id="topUI">
-    <h2 id="title">Catch 15 hearts 💖</h2>
-    <h3 id="score">0 / 15</h3>
+<h2 id="title">Level 1 💖</h2>
+<h3 id="score">0 / 10</h3>
 </div>
 
 <div id="gameArea"></div>
 <div id="messageBox"></div>
 
-<audio id="music" src="https://www.fesliyanstudios.com/play-mp3/387"></audio>
+<audio id="bgm" loop>
+<source src="YOUR_MUSIC_LINK_HERE.mp3">
+</audio>
 
 <script>
-let score = 0;
-let target = 15;
-let speed = 2;
-let level = 1;
-let spawn;
-let combo = 0;
+let level = 1, score = 0, target = 10, speed = 2, spawn;
+let loveScore = 0;
 
 const gameArea = document.getElementById("gameArea");
 const scoreText = document.getElementById("score");
 const title = document.getElementById("title");
 const box = document.getElementById("messageBox");
 
-const herName = "Jerica";
+const levels = [
+{target:10,speed:2,spawn:700},
+{target:12,speed:3,spawn:600},
+{target:15,speed:4,spawn:500},
+{target:18,speed:5,spawn:450},
+{target:20,speed:6,spawn:400},
+{target:30,speed:9,spawn:250}
+];
 
-/* Create heart */
-function createHeart() {
-    const heart = document.createElement("div");
-    heart.className = "heart";
+function createHeart(){
+let h=document.createElement("div");
+h.className="heart";
+h.innerText="💖";
+h.style.left=Math.random()*(window.innerWidth-40)+"px";
+h.style.top="-40px";
+gameArea.appendChild(h);
 
-    // Random golden heart
-    let isGold = Math.random() < 0.15;
-    heart.innerText = isGold ? "💛" : "💖";
-    if (isGold) heart.classList.add("gold");
+let fall=setInterval(()=>{
+let t=parseFloat(h.style.top);
+h.style.top=(t+speed)+"px";
+if(t>gameArea.clientHeight){h.remove();clearInterval(fall);}
+},20);
 
-    heart.style.left = Math.random() * (window.innerWidth - 40) + "px";
-    heart.style.top = "-40px";
-
-    gameArea.appendChild(heart);
-
-    let fall = setInterval(() => {
-        let top = parseFloat(heart.style.top);
-        heart.style.top = (top + speed) + "px";
-
-        if (top > gameArea.clientHeight) {
-            heart.remove();
-            clearInterval(fall);
-            combo = 0;
-        }
-    }, 20);
-
-    heart.onclick = () => {
-        combo++;
-        let points = isGold ? 3 : 1;
-
-        if (combo >= 5) points += 2;
-
-        score += points;
-        scoreText.innerText = score + " / " + target;
-
-        // Spark effect
-        for (let i = 0; i < 5; i++) {
-            let spark = document.createElement("div");
-            spark.className = "spark";
-            spark.innerText = "✨";
-            spark.style.left = heart.style.left;
-            spark.style.top = heart.style.top;
-            gameArea.appendChild(spark);
-
-            setTimeout(() => spark.remove(), 500);
-        }
-
-        heart.remove();
-        clearInterval(fall);
-
-        if (score >= target) nextStage();
-    };
+h.onclick=()=>{
+score++;
+scoreText.innerText=score+" / "+target;
+h.remove();
+clearInterval(fall);
+sparkle(h.style.left,h.style.top);
+if(score>=target)nextLevel();
+};
 }
 
-/* Start */
-function startGame(interval) {
-    spawn = setInterval(createHeart, interval);
-}
-startGame(700);
-
-/* Next stage */
-function nextStage() {
-    clearInterval(spawn);
-    gameArea.innerHTML = "";
-
-    if (level === 1) {
-        level2();
-    } else {
-        finalScene();
-    }
+function sparkle(x,y){
+let s=document.createElement("div");
+s.className="sparkle";
+s.innerText="✨";
+s.style.left=x;
+s.style.top=y;
+gameArea.appendChild(s);
+setTimeout(()=>s.remove(),500);
 }
 
-/* Level 2 */
-function level2() {
-    level = 2;
-    score = 0;
-    target = 12;
-    speed = 5;
-
-    title.innerText = "Level 2 😈 Faster hearts!";
-    scoreText.innerText = "0 / 12";
-
-    startGame(350);
+function startLevel(){
+let d=levels[level-1];
+target=d.target;
+speed=d.speed;
+score=0;
+scoreText.innerText="0 / "+target;
+title.innerText="Level "+level+" 💖";
+spawn=setInterval(createHeart,d.spawn);
 }
 
-/* Final */
-function finalScene() {
-    box.style.display = "block";
-
-    box.innerHTML = `
-        <h3>💌 A message for you, ${herName}</h3>
-        <button class="btn" onclick="openLetter()">Open 💖</button>
-    `;
+function nextLevel(){
+clearInterval(spawn);
+gameArea.innerHTML="";
+level++;
+if(level<=6){startLevel();}else{finalScene();}
 }
 
-/* Letter */
-function openLetter() {
-    box.innerHTML = `
-        <h2>💖 ${herName} 💖</h2>
-        <p>I know I hurt you… and I’ve been thinking about it a lot.</p>
-        <p>Not just a little — but really thinking about everything.</p>
-        <p>You didn’t deserve that, and I regret it more than I can explain.</p>
-        <p>I miss the way we talk, the way you laugh, the way everything felt easy with you.</p>
-        <p>I don’t expect things to magically fix… but I want to try.</p>
-        <p>I want to be better — not just say it, but actually prove it.</p>
-        <p>If you give me another chance, I’ll take it seriously this time.</p>
-        <b>Do you still like me?</b><br>
-
-        <button class="btn" onclick="yes()">👍 Yes</button>
-        <button class="btn" id="noBtn" onmouseover="moveNo()">💔 No</button>
-    `;
+/* QUIZ */
+function finalScene(){
+box.style.display="block";
+box.innerHTML=`
+<h3>💌 Wait… one more thing 😏</h3>
+<p>Let’s see if you really know me 💖</p>
+<button class="btn" onclick="startQuiz()">Start 💕</button>`;
 }
 
-/* NO button runs away 😈 */
-function moveNo() {
-    const btn = document.getElementById("noBtn");
-    btn.style.position = "absolute";
-    btn.style.left = Math.random() * 200 + "px";
-    btn.style.top = Math.random() * 200 + "px";
+function normalize(t){
+return t.toLowerCase().replace(/[^a-z0-9 ]/g,"").trim();
 }
 
-/* YES */
-function yes() {
-    document.getElementById("music").play().catch(()=>{});
-
-    document.body.innerHTML = `
-        <h1 style="margin-top:40%;">
-        💖 Thank you, ${herName} 😭💕<br>
-        I’ll do better, I promise.
-        </h1>
-    `;
+function startQuiz(){
+loveScore=0;
+box.innerHTML=`
+<h3>What is my full name? 💖</h3>
+<input id="q1"><br>
+<button class="btn" onclick="checkName()">Next</button>`;
 }
+
+function checkName(){
+let v=normalize(q1.value);
+if(v.includes("mary")&&v.includes("pasaporte")){
+loveScore++;question2();
+}else alert("You forgot? 😢");
+}
+
+function question2(){
+box.innerHTML=`
+<h3>What is my favorite color? 🎨</h3>
+<input id="q2"><br>
+<button class="btn" onclick="checkColor()">Next</button>`;
+}
+
+function checkColor(){
+let v=normalize(q2.value);
+if(v.includes("no")||v.includes("dont")){
+loveScore++;question3();
+}else alert("Hmm not quite 😝");
+}
+
+function question3(){
+box.innerHTML=`
+<h3>When is my birthday? 🎂</h3>
+<input id="q3"><br>
+<button class="btn" onclick="checkBirthday()">Next</button>`;
+}
+
+function checkBirthday(){
+let v=normalize(q3.value);
+if(v.includes("april")&&v.includes("17")){
+loveScore++;bonus();
+}else alert("Try again 😭");
+}
+
+function bonus(){
+box.innerHTML=`
+<h3>Bonus 😈 How did we meet?</h3>
+<input id="q4"><br>
+<button class="btn" onclick="checkBonus()">Finish 💕</button>`;
+}
+
+function checkBonus(){
+let v=normalize(q4.value);
+if(v.includes("ysha")||v.includes("best friend"))loveScore++;
+openLetter();
+}
+
+/* LETTER */
+function openLetter(){
+document.getElementById("bgm").play();
+
+let extra = loveScore===4
+? "💖 You know me perfectly… I love you so much."
+: "💖 Even if not perfect… I still love you 😘";
+
+box.innerHTML=`
+<h2>💖 My Love 💖</h2>
+
+<div class="imgBox">
+<img src="PUT_IMAGE_1_HERE" class="slide">
+<img src="PUT_IMAGE_2_HERE" class="slide">
+</div>
+
+<p>${extra}</p>
+<p id="letterText"></p>
+
+<button class="btn" onclick="secret()">😈 Secret</button>
+`;
+
+startSlideshow();
+typeLetter();
+}
+
+let i=0,index=0;
+
+function startSlideshow(){
+let s=document.querySelectorAll(".slide");
+setInterval(()=>{
+s.forEach(img=>img.style.display="none");
+s[index].style.display="block";
+index=(index+1)%s.length;
+},2000);
+}
+
+const msg=`Baby I love you and you know what I love about you is when you always understand me.
+
+Thank you for everything.
+
+Good night love, sleep well, sleep tight and sweet dreams baby.
+
+Goodnight my beautiful and gorgeous only wife ko 💖`;
+
+function typeLetter(){
+let el=document.getElementById("letterText");
+function t(){
+if(i<msg.length){
+el.innerHTML+=msg.charAt(i);
+i++;
+setTimeout(t,30);
+}}
+t();
+}
+
+function secret(){
+alert("Forever and always, it's you 💖");
+}
+
+startLevel();
 </script>
 
 </body>
