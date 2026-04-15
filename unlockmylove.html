@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For You 💖</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background: linear-gradient(to top, #ffd6e0, #ffffff);
+    overflow: hidden;
+}
+
+#topUI {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background: rgba(255,255,255,0.95);
+    padding: 10px;
+}
+
+#gameArea {
+    position: absolute;
+    top: 80px;
+    width: 100%;
+    height: calc(100vh - 80px);
+}
+
+.heart {
+    position: absolute;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+.sparkle {
+    position: absolute;
+    font-size: 14px;
+}
+
+#messageBox {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 360px;
+}
+
+.btn {
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    background: #ff7aa2;
+    color: white;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+.imgBox img {
+    width: 100%;
+    border-radius: 10px;
+    margin-top: 10px;
+    display: none;
+}
+</style>
+</head>
+
+<body>
+
+<div id="topUI">
+<h2 id="title">Level 1 💖</h2>
+<h3 id="score">0 / 10</h3>
+</div>
+
+<div id="gameArea"></div>
+<div id="messageBox"></div>
+
+<audio id="bgm" loop>
+<source src="YOUR_MUSIC_LINK_HERE.mp3">
+</audio>
+
+<script>
+let level = 1, score = 0, target = 10, speed = 2, spawn;
+let loveScore = 0;
+
+const gameArea = document.getElementById("gameArea");
+const scoreText = document.getElementById("score");
+const title = document.getElementById("title");
+const box = document.getElementById("messageBox");
+
+const levels = [
+{target:10,speed:2,spawn:700},
+{target:12,speed:3,spawn:600},
+{target:15,speed:4,spawn:500},
+{target:18,speed:5,spawn:450},
+{target:20,speed:6,spawn:400},
+{target:30,speed:9,spawn:250}
+];
+
+function createHeart(){
+let h=document.createElement("div");
+h.className="heart";
+h.innerText="💖";
+h.style.left=Math.random()*(window.innerWidth-40)+"px";
+h.style.top="-40px";
+gameArea.appendChild(h);
+
+let fall=setInterval(()=>{
+let t=parseFloat(h.style.top);
+h.style.top=(t+speed)+"px";
+if(t>gameArea.clientHeight){h.remove();clearInterval(fall);}
+},20);
+
+h.onclick=()=>{
+score++;
+scoreText.innerText=score+" / "+target;
+h.remove();
+clearInterval(fall);
+sparkle(h.style.left,h.style.top);
+if(score>=target)nextLevel();
+};
+}
+
+function sparkle(x,y){
+let s=document.createElement("div");
+s.className="sparkle";
+s.innerText="✨";
+s.style.left=x;
+s.style.top=y;
+gameArea.appendChild(s);
+setTimeout(()=>s.remove(),500);
+}
+
+function startLevel(){
+let d=levels[level-1];
+target=d.target;
+speed=d.speed;
+score=0;
+scoreText.innerText="0 / "+target;
+title.innerText="Level "+level+" 💖";
+spawn=setInterval(createHeart,d.spawn);
+}
+
+function nextLevel(){
+clearInterval(spawn);
+gameArea.innerHTML="";
+level++;
+if(level<=6){startLevel();}else{finalScene();}
+}
+
+/* QUIZ */
+function finalScene(){
+box.style.display="block";
+box.innerHTML=`
+<h3>💌 Wait… one more thing 😏</h3>
+<p>Let’s see if you really know me 💖</p>
+<button class="btn" onclick="startQuiz()">Start 💕</button>`;
+}
+
+function normalize(t){
+return t.toLowerCase().replace(/[^a-z0-9 ]/g,"").trim();
+}
+
+function startQuiz(){
+loveScore=0;
+box.innerHTML=`
+<h3>What is my full name? 💖</h3>
+<input id="q1"><br>
+<button class="btn" onclick="checkName()">Next</button>`;
+}
+
+function checkName(){
+let v=normalize(q1.value);
+if(v.includes("mary")&&v.includes("pasaporte")){
+loveScore++;question2();
+}else alert("You forgot? 😢");
+}
+
+function question2(){
+box.innerHTML=`
+<h3>What is my favorite color? 🎨</h3>
+<input id="q2"><br>
+<button class="btn" onclick="checkColor()">Next</button>`;
+}
+
+function checkColor(){
+let v=normalize(q2.value);
+if(v.includes("no")||v.includes("dont")){
+loveScore++;question3();
+}else alert("Hmm not quite 😝");
+}
+
+function question3(){
+box.innerHTML=`
+<h3>When is my birthday? 🎂</h3>
+<input id="q3"><br>
+<button class="btn" onclick="checkBirthday()">Next</button>`;
+}
+
+function checkBirthday(){
+let v=normalize(q3.value);
+if(v.includes("april")&&v.includes("17")){
+loveScore++;bonus();
+}else alert("Try again 😭");
+}
+
+function bonus(){
+box.innerHTML=`
+<h3>Bonus 😈 How did we meet?</h3>
+<input id="q4"><br>
+<button class="btn" onclick="checkBonus()">Finish 💕</button>`;
+}
+
+function checkBonus(){
+let v=normalize(q4.value);
+if(v.includes("ysha")||v.includes("best friend"))loveScore++;
+openLetter();
+}
+
+/* LETTER */
+function openLetter(){
+document.getElementById("bgm").play();
+
+let extra = loveScore===4
+? "💖 You know me perfectly… I love you so much."
+: "💖 Even if not perfect… I still love you 😘";
+
+box.innerHTML=`
+<h2>💖 My Love 💖</h2>
+
+<div class="imgBox">
+<img src="PUT_IMAGE_1_HERE" class="slide">
+<img src="PUT_IMAGE_2_HERE" class="slide">
+</div>
+
+<p>${extra}</p>
+<p id="letterText"></p>
+
+<button class="btn" onclick="secret()">😈 Secret</button>
+`;
+
+startSlideshow();
+typeLetter();
+}
+
+let i=0,index=0;
+
+function startSlideshow(){
+let s=document.querySelectorAll(".slide");
+setInterval(()=>{
+s.forEach(img=>img.style.display="none");
+s[index].style.display="block";
+index=(index+1)%s.length;
+},2000);
+}
+
+const msg=`Baby I love you and you know what I love about you is when you always understand me.
+
+Thank you for everything.
+
+Good night love, sleep well, sleep tight and sweet dreams baby.
+
+Goodnight my beautiful and gorgeous only wife ko 💖`;
+
+function typeLetter(){
+let el=document.getElementById("letterText");
+function t(){
+if(i<msg.length){
+el.innerHTML+=msg.charAt(i);
+i++;
+setTimeout(t,30);
+}}
+t();
+}
+
+function secret(){
+alert("Forever and always, it's you 💖");
+}
+
+startLevel();
+</script>
+
+</body>
+</html>
