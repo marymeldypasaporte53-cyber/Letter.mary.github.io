@@ -1,26 +1,63 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>For Jerica 💖</title>
 
 <style>
 body {
     margin: 0;
-    overflow: hidden;
     font-family: Arial, sans-serif;
     text-align: center;
-    background: linear-gradient(to top, #ffd6e0, #fff);
+    background: linear-gradient(to top, #ffd6e0, #ffffff);
+    overflow: hidden;
 }
 
-h1, h3 {
-    margin-top: 20px;
+#topUI {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background: rgba(255,255,255,0.95);
+    padding: 10px;
+    z-index: 10;
 }
 
-#heart {
+#gameArea {
     position: absolute;
-    font-size: 40px;
+    top: 80px;
+    width: 100%;
+    height: calc(100vh - 80px);
+    overflow: hidden;
+}
+
+/* Hearts */
+.heart {
+    position: absolute;
+    font-size: 28px;
     cursor: pointer;
+    user-select: none;
+}
+
+/* Golden heart */
+.gold {
+    color: gold;
+    text-shadow: 0 0 10px gold;
+}
+
+/* Spark effect */
+.spark {
+    position: absolute;
+    font-size: 14px;
+    pointer-events: none;
+    animation: pop 0.5s forwards;
+}
+
+@keyframes pop {
+    to {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
 }
 
 #messageBox {
@@ -30,138 +67,187 @@ h1, h3 {
     left: 50%;
     transform: translate(-50%, -50%);
     background: white;
-    padding: 25px;
+    padding: 20px;
     border-radius: 15px;
     box-shadow: 0 0 20px rgba(0,0,0,0.2);
-    width: 80%;
-    max-width: 350px;
+    width: 85%;
+    max-width: 340px;
+    z-index: 20;
 }
 
 .btn {
-    padding: 10px 15px;
-    margin: 5px;
+    padding: 10px;
     border: none;
-    border-radius: 8px;
-    cursor: pointer;
+    border-radius: 10px;
     background: #ff7aa2;
     color: white;
     font-weight: bold;
-}
-
-.btn:hover {
-    transform: scale(1.1);
+    margin: 5px;
+    cursor: pointer;
+    position: relative;
 }
 </style>
 </head>
 
 <body>
 
-<h1 id="title">Catch 15 hearts 💖</h1>
-<h3 id="score">Hearts: 0 / 15</h3>
+<div id="topUI">
+    <h2 id="title">Catch 15 hearts 💖</h2>
+    <h3 id="score">0 / 15</h3>
+</div>
 
-<div id="heart">💖</div>
+<div id="gameArea"></div>
 <div id="messageBox"></div>
 
-<audio id="happyMusic" src="https://www.fesliyanstudios.com/play-mp3/387"></audio>
+<audio id="music" src="https://www.fesliyanstudios.com/play-mp3/387"></audio>
 
 <script>
 let score = 0;
+let target = 15;
+let speed = 2;
 let level = 1;
-let heart = document.getElementById("heart");
-let herName = "Jerica";
+let spawn;
+let combo = 0;
 
-function moveHeart() {
-    let x = Math.random() * (window.innerWidth - 50);
-    let y = Math.random() * (window.innerHeight - 50);
-    heart.style.left = x + "px";
-    heart.style.top = y + "px";
+const gameArea = document.getElementById("gameArea");
+const scoreText = document.getElementById("score");
+const title = document.getElementById("title");
+const box = document.getElementById("messageBox");
+
+const herName = "Jerica";
+
+/* Create heart */
+function createHeart() {
+    const heart = document.createElement("div");
+    heart.className = "heart";
+
+    // Random golden heart
+    let isGold = Math.random() < 0.15;
+    heart.innerText = isGold ? "💛" : "💖";
+    if (isGold) heart.classList.add("gold");
+
+    heart.style.left = Math.random() * (window.innerWidth - 40) + "px";
+    heart.style.top = "-40px";
+
+    gameArea.appendChild(heart);
+
+    let fall = setInterval(() => {
+        let top = parseFloat(heart.style.top);
+        heart.style.top = (top + speed) + "px";
+
+        if (top > gameArea.clientHeight) {
+            heart.remove();
+            clearInterval(fall);
+            combo = 0;
+        }
+    }, 20);
+
+    heart.onclick = () => {
+        combo++;
+        let points = isGold ? 3 : 1;
+
+        if (combo >= 5) points += 2;
+
+        score += points;
+        scoreText.innerText = score + " / " + target;
+
+        // Spark effect
+        for (let i = 0; i < 5; i++) {
+            let spark = document.createElement("div");
+            spark.className = "spark";
+            spark.innerText = "✨";
+            spark.style.left = heart.style.left;
+            spark.style.top = heart.style.top;
+            gameArea.appendChild(spark);
+
+            setTimeout(() => spark.remove(), 500);
+        }
+
+        heart.remove();
+        clearInterval(fall);
+
+        if (score >= target) nextStage();
+    };
 }
 
-heart.onclick = function() {
-    score++;
+/* Start */
+function startGame(interval) {
+    spawn = setInterval(createHeart, interval);
+}
+startGame(700);
+
+/* Next stage */
+function nextStage() {
+    clearInterval(spawn);
+    gameArea.innerHTML = "";
 
     if (level === 1) {
-        document.getElementById("score").innerText = "Hearts: " + score + " / 15";
-
-        if (score >= 15) {
-            heart.style.display = "none";
-            showWinLevel1();
-        } else {
-            moveHeart();
-        }
-
+        level2();
     } else {
-        document.getElementById("score").innerText = "Hearts: " + score + " / 10";
-
-        if (score >= 10) {
-            showFinalMessage();
-        } else {
-            moveHeart();
-        }
+        finalScene();
     }
-};
-
-function showWinLevel1() {
-    let box = document.getElementById("messageBox");
-    box.style.display = "block";
-
-    box.innerHTML = `
-        🎉 You win, ${herName}! 💖<br><br>
-        Ready for the next level? 😔<br><br>
-        <button class="btn" onclick="startLevel2()">Continue 💌</button>
-    `;
 }
 
-function startLevel2() {
+/* Level 2 */
+function level2() {
     level = 2;
     score = 0;
+    target = 12;
+    speed = 5;
 
-    document.getElementById("messageBox").style.display = "none";
-    document.getElementById("heart").style.display = "block";
+    title.innerText = "Level 2 😈 Faster hearts!";
+    scoreText.innerText = "0 / 12";
 
-    document.getElementById("title").innerText = "Catch 10 hearts 💖";
-    document.getElementById("score").innerText = "Hearts: 0 / 10";
-
-    moveHeart();
+    startGame(350);
 }
 
-function showFinalMessage() {
-    let box = document.getElementById("messageBox");
-
-    document.getElementById("heart").style.display = "none";
-    document.getElementById("title").style.display = "none";
-    document.getElementById("score").style.display = "none";
-
+/* Final */
+function finalScene() {
     box.style.display = "block";
 
     box.innerHTML = `
-        <div style="font-size:50px;">💌</div>
-        <h3>A letter for you, ${herName}</h3>
+        <h3>💌 A message for you, ${herName}</h3>
         <button class="btn" onclick="openLetter()">Open 💖</button>
     `;
 }
 
+/* Letter */
 function openLetter() {
-    let box = document.getElementById("messageBox");
-
     box.innerHTML = `
         <h2>💖 ${herName} 💖</h2>
-        <p>I know I hurt you… and I regret it.</p>
-        <p>I want to be better and prove it to you.</p>
-        <b>Can I still fix this with you?</b><br><br>
+        <p>I know I hurt you… and I’ve been thinking about it a lot.</p>
+        <p>Not just a little — but really thinking about everything.</p>
+        <p>You didn’t deserve that, and I regret it more than I can explain.</p>
+        <p>I miss the way we talk, the way you laugh, the way everything felt easy with you.</p>
+        <p>I don’t expect things to magically fix… but I want to try.</p>
+        <p>I want to be better — not just say it, but actually prove it.</p>
+        <p>If you give me another chance, I’ll take it seriously this time.</p>
+        <b>Do you still like me?</b><br>
 
-        <button class="btn" onclick="yes()">Yes 💖</button>
+        <button class="btn" onclick="yes()">👍 Yes</button>
+        <button class="btn" id="noBtn" onmouseover="moveNo()">💔 No</button>
     `;
 }
 
+/* NO button runs away 😈 */
+function moveNo() {
+    const btn = document.getElementById("noBtn");
+    btn.style.position = "absolute";
+    btn.style.left = Math.random() * 200 + "px";
+    btn.style.top = Math.random() * 200 + "px";
+}
+
+/* YES */
 function yes() {
-    document.getElementById("happyMusic").play();
+    document.getElementById("music").play().catch(()=>{});
+
     document.body.innerHTML = `
-        <h1 style="margin-top:40%;">💖 Thank you, ${herName} 😭💕<br>I’ll do better.</h1>
+        <h1 style="margin-top:40%;">
+        💖 Thank you, ${herName} 😭💕<br>
+        I’ll do better, I promise.
+        </h1>
     `;
 }
-
-moveHeart();
 </script>
 
 </body>
